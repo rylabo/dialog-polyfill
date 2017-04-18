@@ -1,3 +1,6 @@
+/* jshint undef: true, expr: true, browser: true, devel: true, mocha: true */
+/* globals dialogPolyfill */
+
 /*
  * Copyright 2015 Google Inc. All rights reserved.
  *
@@ -27,8 +30,8 @@ void function() {
     var expectedTop = (window.innerHeight - d.offsetHeight) / 2;
     var expectedLeft = (window.innerWidth - d.offsetWidth) / 2;
     var rect = d.getBoundingClientRect();
-    assert.closeTo(rect.top, expectedTop, 1, 'top should be nearby');
-    assert.closeTo(rect.left, expectedLeft, 1, 'left should be nearby');
+    rect.top.should.be.approximately(expectedTop, 1, 'top ('+ rect.top +') should be nearby ' + expectedTop + '\n');
+    rect.left.should.be.approximately(expectedLeft, 1, 'left ('+ rect.left +') should be nearby '+ expectedLeft + '\n');
   }
 
   /**
@@ -54,7 +57,7 @@ void function() {
    */
   var cleanup = (function() {
     var e = [];
-    teardown(function() {
+    afterEach(function() {
       e.forEach(function(el) {
         try {
           el.close();  // try to close dialogs
@@ -88,44 +91,43 @@ void function() {
   }
 
   var dialog;  // global dialog for all tests
-  setup(function() {
+  beforeEach(function() {
     dialog = createDialog('Default Dialog');
   });
 
-  suite('basic', function() {
-    test('show and close', function() {
-      assert.isFalse(dialog.hasAttribute('open'));
+  describe('basic functions', function() {
+    it('shows and closes', function() {
+      dialog.hasAttribute('open').should.be.false();
       dialog.show();
-      assert.isTrue(dialog.hasAttribute('open'));
-      assert.isTrue(dialog.open);
+      dialog.hasAttribute('open').should.be.true();
+      dialog.open.should.be.true();
 
       var returnValue = 1234;
       dialog.close(returnValue);
-      assert.isFalse(dialog.hasAttribute('open'));
-      assert.equal(dialog.returnValue, returnValue);
+      dialog.hasAttribute('open').should.be.false();
+      dialog.returnValue.should.eql(returnValue);
 
       dialog.show();
       dialog.close();
-      assert.isFalse(dialog.open);
-      assert.equal(dialog.returnValue, returnValue);
+      dialog.open.should.be.false();
+      dialog.returnValue.should.eql(returnValue);
     });
-    test('open property', function() {
-      assert.isFalse(dialog.hasAttribute('open'));
+    it('open property', function() {
+      dialog.hasAttribute('open').should.be.false();
       dialog.show();
-      assert.isTrue(dialog.hasAttribute('open'));
-      assert.isTrue(dialog.open);
+      dialog.hasAttribute('open').should.be.true();
+      dialog.open.should.be.true();
 
       dialog.open = false;
-      assert.isFalse(dialog.open);
-      assert.isFalse(dialog.hasAttribute('open'),
-          'open property should clear attribute');
-      assert.throws(dialog.close);
+      dialog.open.should.be.false();
+      dialog.hasAttribute('open').should.be.false('open property should clear attribute');
+      dialog.close.should.throw();
 
       var overlay = document.querySelector('._dialog_overlay');
-      assert.isNull(overlay);
+      (overlay === null).should.be.true();
     });
-    test('show/showModal interaction', function() {
-      assert.isFalse(dialog.hasAttribute('open'));
+    it('show/showModal interaction', function() {
+      dialog.hasAttribute('open').should.be.false();
       dialog.show();
 
       // If the native dialog is being tested, show/showModal are not already
@@ -133,54 +135,54 @@ void function() {
       var show = function() { dialog.show(); };
       var showModal = function() { dialog.showModal(); };
 
-      assert.doesNotThrow(show);
-      assert.throws(showModal);
+      show.should.not.throw();
+      showModal.should.throw();
 
       dialog.open = false;
-      assert.doesNotThrow(showModal);
-      assert.doesNotThrow(show);  // show after showModal does nothing
-      assert.throws(showModal);
+      showModal.should.not.throw();
+      show.should.not.throw();  // show after showModal does nothing
+      showModal.should.throw();
       // TODO: check dialog is still modal
 
-      assert.isTrue(dialog.open);
+      dialog.open.should.be.true();
     });
-    test('setAttribute reflects property', function() {
+    it('setAttribute reflects property', function() {
       dialog.setAttribute('open', '');
-      assert.isTrue(dialog.open, 'attribute opens dialog');
+      dialog.open.should.be.true('attribute opens dialog');
     });
-    test('changing open to dummy value is ignored', function() {
+    it('changing open to dummy value is ignored', function() {
       dialog.showModal();
 
       dialog.setAttribute('open', 'dummy, ignored');
-      assert.isTrue(dialog.open, 'dialog open with dummy open value');
+      dialog.open.should.be.true('dialog open with dummy open value');
 
       var overlay = document.querySelector('._dialog_overlay');
-      assert(overlay, 'dialog is still modal');
+      overlay.should.be.ok('dialog is still modal');
     });
-    test('show/showModal outside document', function() {
+    it('show/showModal outside document', function() {
       dialog.open = false;
       dialog.parentNode.removeChild(dialog);
 
-      assert.throws(function() { dialog.showModal(); });
+      (function() { dialog.showModal(); }).should.throw();
 
-      assert.doesNotThrow(function() { dialog.show(); });
-      assert.isTrue(dialog.open, 'can open non-modal outside document');
-      assert.isFalse(document.body.contains(dialog));
+      (function() { dialog.show(); }).should.not.throw();
+      dialog.open.should.be.true('can open non-modal outside document');
+      document.body.contains(dialog).should.be.false();
     });
-    test('has a11y property', function() {
-      assert.equal(dialog.getAttribute('role'), 'dialog', 'role should be dialog');
+    it('has a11y property', function() {
+      dialog.getAttribute('role').should.eql('dialog', 'role should be dialog');
     });
   });
 
-  suite('DOM', function() {
-    setup(function(done) {
+  describe('DOM', function() {
+    beforeEach(function(done) {
       // DOM tests wait for modal to settle, so MutationOberver doesn't coalesce attr changes
       dialog.showModal();
       window.setTimeout(done, 0);
     });
-    test('DOM direct removal', function(done) {
-      assert.isTrue(dialog.open);
-      assert.isNotNull(document.querySelector('.backdrop'));
+    it('DOM direct removal', function(done) {
+      dialog.open.should.be.true();
+      (document.querySelector('.backdrop') === null).should.be.false();
 
       var parentNode = dialog.parentNode;
       parentNode.removeChild(dialog);
@@ -188,18 +190,19 @@ void function() {
       // DOMNodeRemoved defers its task a frame (since it occurs before removal, not after). This
       // doesn't effect MutationObserver, just delays the test a frame.
       window.setTimeout(function() {
-        assert.isNull(document.querySelector('.backdrop'), 'dialog removal should clear modal');
+        (document.querySelector('.backdrop') === null).should.be.true('dialog removal should clear modal');
 
-        assert.isTrue(dialog.open, 'removed dialog should still be open');
+        dialog.open.should.be.true('removed dialog should still be open');
         parentNode.appendChild(dialog);
 
-        assert.isTrue(dialog.open, 're-added dialog should still be open');
-        assert.isNull(document.querySelector('.backdrop'), 're-add dialog should not be modal');
+        dialog.open.should.be.true('re-added dialog should still be open');
+        (document.querySelector('.backdrop') === null).should.be.true('dialog removal should clear modal');
+        (document.querySelector('.backdrop') === null).should.be.true('re-add dialog should not be modal');
 
         done();
       }, 0);
     });
-    test('DOM removal inside other element', function(done) {
+    it('DOM removal inside other element', function(done) {
       var div = cleanup(document.createElement('div'));
       document.body.appendChild(div);
       div.appendChild(dialog);
@@ -207,27 +210,27 @@ void function() {
       document.body.removeChild(div);
 
       window.setTimeout(function() {
-        assert.isNull(document.querySelector('.backdrop'), 'dialog removal should clear modal');
-        assert.isTrue(dialog.open, 'removed dialog should still be open');
+        (document.querySelector('.backdrop') === null).should.be.true('dialog removal should clear modal');
+        dialog.open.should.be.true('removed dialog should still be open');
         done();
       }, 0);
     });
-    test('DOM instant remove/add', function(done) {
+    it('DOM instant remove/add', function(done) {
       var div = cleanup(document.createElement('div'));
       document.body.appendChild(div);
       dialog.parentNode.removeChild(dialog);
       div.appendChild(dialog);
 
       window.setTimeout(function() {
-        assert.isNull(document.querySelector('.backdrop'), 'backdrop should disappear');
-        assert.isTrue(dialog.open);
+        (document.querySelector('.backdrop') === null).should.be.true('backdrop should disappear');
+        dialog.open.should.be.true();
         done();
       }, 0);
     });
   });
 
-  suite('position', function() {
-    test('non-modal is not centered', function() {
+  describe('position', function() {
+    it('non-modal is not centered', function() {
       var el = cleanup(document.createElement('div'));
       dialog.parentNode.insertBefore(el, dialog);
       var testRect = el.getBoundingClientRect();
@@ -235,23 +238,23 @@ void function() {
       dialog.show();
       var rect = dialog.getBoundingClientRect();
 
-      assert.equal(rect.top, testRect.top, 'dialog should not be centered');
+      rect.top.should.eql(testRect.top, 'dialog should not be centered');
     });
-    test('default modal centering', function() {
+    it('default modal centering', function() {
       dialog.showModal();
       checkDialogCenter();
-      assert.ok(dialog.style.top, 'expected top to be set');
+      dialog.style.top.should.be.ok('expected top to be set');
       dialog.close();
-      assert.notOk(dialog.style.top, 'expected top to be cleared');
+      dialog.style.top.should.not.be.ok('expected top to be cleared');
     });
-    test('modal respects static position', function() {
+    it('modal respects static position', function() {
       dialog.style.top = '10px';
       dialog.showModal();
 
       var rect = dialog.getBoundingClientRect();
-      assert.equal(rect.top, 10);
+      rect.top.should.eql(10);
     });
-    test('modal recentering', function() {
+    it('modal recentering', function() {
       var pX = document.body.scrollLeft;
       var pY = document.body.scrollTop;
       var big = cleanup(document.createElement('div'));
@@ -271,12 +274,12 @@ void function() {
         // after scroll, we aren't recentered, check offset
         window.scrollTo(0, 0);
         var rect = dialog.getBoundingClientRect();
-        assert.closeTo(rectAtScroll.top + scrollValue, rect.top, 1);
+        (rectAtScroll.top + scrollValue).should.be.approximately(rect.top, 1);
       } finally {
         window.scrollTo(pX, pY);
       }
     });
-    test('clamped to top of page', function() {
+    it('clamped to top of page', function() {
       var big = cleanup(document.createElement('div'));
       big.style.height = '200vh';  // 2x view height
       document.body.appendChild(big);
@@ -286,43 +289,42 @@ void function() {
       dialog.showModal();
 
       var visibleRect = dialog.getBoundingClientRect();
-      assert.equal(visibleRect.top, 0, 'large dialog should be visible at top of page');
+      visibleRect.top.should.eql(0, 'large dialog should be visible at top of page');
 
       var style = window.getComputedStyle(dialog);
-      assert.equal(style.top, document.documentElement.scrollTop + 'px',
-          'large dialog should be absolutely positioned at scroll top');
+      style.top.should.eql(document.documentElement.scrollTop + 'px', 'large dialog should be absolutely positioned at scroll top');
     });
   });
 
-  suite('backdrop', function() {
-    test('backdrop div on modal', function() {
+  describe('backdrop', function() {
+    it('backdrop div on modal', function() {
       dialog.showModal();
       var foundBackdrop = document.querySelector('.backdrop');
-      assert.isNotNull(foundBackdrop);
+      (foundBackdrop === null).should.be.false();
 
       var sibling = dialog.nextElementSibling;
-      assert.strictEqual(foundBackdrop, sibling);
+      foundBackdrop.should.equal(sibling);
     });
-    test('no backdrop on non-modal', function() {
+    it('no backdrop on non-modal', function() {
       dialog.show();
-      assert.isNull(document.querySelector('.backdrop'));
+      (document.querySelector('.backdrop') === null).should.be.true();
       dialog.close();
     });
-    test('backdrop click appears as dialog', function() {
+    it('backdrop click appears as dialog', function() {
       dialog.showModal();
       var backdrop = dialog.nextElementSibling;
 
       var clickFired = 0;
       var helper = function(ev) {
-        assert.equal(ev.target, dialog);
+        ev.target.should.eql(dialog);
         ++clickFired;
       };
 
-      dialog.addEventListener('click', helper)
+      dialog.addEventListener('click', helper);
       backdrop.click();
-      assert.equal(clickFired, 1);
+      clickFired.should.eql(1);
     });
-    test('backdrop click focuses dialog', function() {
+    it('backdrop click focuses dialog', function() {
       dialog.showModal();
       dialog.tabIndex = 0;
 
@@ -335,12 +337,12 @@ void function() {
 
       var backdrop = dialog.nextElementSibling;
       backdrop.click();
-      assert.equal(document.activeElement, dialog);
+      document.activeElement.should.eql(dialog);
     });
   });
 
-  suite('form focus', function() {
-    test('non-modal inside modal is focusable', function() {
+  describe('form focus', function() {
+    it('non-modal inside modal is focusable', function() {
       var sub = createDialog();
       dialog.appendChild(sub);
 
@@ -352,9 +354,9 @@ void function() {
       sub.show();
 
       input.focus();
-      assert.equal(input, document.activeElement);
+      input.should.eql(document.activeElement);
     });
-    test('clear focus when nothing focusable in modal', function() {
+    it('clear focus when nothing focusable in modal', function() {
       var input = cleanup(document.createElement('input'));
       input.type = 'text';
       document.body.appendChild(input);
@@ -362,9 +364,9 @@ void function() {
 
       var previous = document.activeElement;
       dialog.showModal();
-      assert.notEqual(previous, document.activeElement);
+      previous.should.not.eql(document.activeElement);
     });
-    test('default focus on modal', function() {
+    it('default focus on modal', function() {
       var input = cleanup(document.createElement('input'));
       input.type = 'text';
       dialog.appendChild(input);
@@ -374,17 +376,17 @@ void function() {
       dialog.appendChild(anotherInput);
 
       dialog.showModal();
-      assert.equal(document.activeElement, input);
+      document.activeElement.should.eql(input);
     });
-    test('default focus on non-modal', function() {
+    it('default focus on non-modal', function() {
       var div = cleanup(document.createElement('div'));
       div.tabIndex = 4;
       dialog.appendChild(div);
 
       dialog.show();
-      assert.equal(document.activeElement, div);
+      document.activeElement.should.eql(div);
     });
-    test('autofocus element chosen', function() {
+    it('autofocus element chosen', function() {
       var input = cleanup(document.createElement('input'));
       input.type = 'text';
       dialog.appendChild(input);
@@ -395,29 +397,27 @@ void function() {
       dialog.appendChild(inputAF);
 
       dialog.showModal();
-      assert.equal(document.activeElement, inputAF);
+      document.activeElement.should.eql(inputAF);
     });
-    test('child modal dialog', function() {
+    it('child modal dialog', function() {
       dialog.showModal();
 
       var input = cleanup(document.createElement('input'));
       input.type = 'text';
       dialog.appendChild(input);
       input.focus();
-      assert.equal(document.activeElement, input);
+      document.activeElement.should.eql(input);
 
       // NOTE: This is a single sub-test, but all the above tests could be run
       // again in a sub-context (i.e., dialog within dialog).
       var child = createDialog();
       child.showModal();
-      assert.notEqual(document.activeElement, input,
-          'additional modal dialog should clear parent focus');
+      document.activeElement.should.not.eql(input, 'additional modal dialog should clear parent focus');
 
       child.close();
-      assert.notEqual(document.activeElement, input,
-          'parent focus should not be restored');
+      document.activeElement.should.not.eql(input, 'parent focus should not be restored');
     });
-    test('don\'t scroll anything into focus', function() {
+    it('don\'t scroll anything into focus', function() {
       // https://github.com/GoogleChrome/dialog-polyfill/issues/119
 
       var div = cleanup(document.createElement('div'));
@@ -435,27 +435,25 @@ void function() {
 
       var prev = document.documentElement.scrollTop;
       dialog.showModal();
-      assert.equal(document.documentElement.scrollTop, prev);
+      document.documentElement.scrollTop.should.eql(prev);
     });
   });
 
-  suite('top layer / inert', function() {
-    test('background focus allowed on non-modal', function() {
+  describe('top layer / inert', function() {
+    it('background focus allowed on non-modal', function() {
       var input = cleanup(document.createElement('input'));
       input.type = 'text';
       document.body.appendChild(input);
       input.focus();
 
       dialog.show();
-      assert.notEqual(document.activeElement, input,
-        'non-modal dialog should clear focus, even with no dialog content');
+      document.activeElement.should.not.eql(input, 'non-modal dialog should clear focus, even with no dialog content');
 
       document.body.focus();
       input.focus();
-      assert.equal(document.activeElement, input,
-          'non-modal should allow background focus');
+      document.activeElement.should.eql(input, 'non-modal should allow background focus');
     });
-    test('modal disallows background focus', function() {
+    it('modal disallows background focus', function() {
       var input = cleanup(document.createElement('input'));
       input.type = 'text';
       document.body.appendChild(input);
@@ -470,10 +468,9 @@ void function() {
         console.warn('background focus test requires document focus');
         document.documentElement.focus();
       }
-      assert.notEqual(document.activeElement, input,
-          'modal should disallow background focus');
+      document.activeElement.should.not.eql(input, 'modal should disallow background focus');
     });
-    test('overlay is a sibling of topmost dialog', function() {
+    it('overlay is a sibling of topmost dialog', function() {
       var stacking = cleanup(document.createElement('div'));
       stacking.style.opacity = 0.8;  // creates stacking context
       document.body.appendChild(stacking);
@@ -481,10 +478,10 @@ void function() {
       dialog.showModal();
 
       var overlay = document.querySelector('._dialog_overlay');
-      assert.isNotNull(overlay);
-      assert.equal(overlay.parentNode, dialog.parentNode);
+      (overlay === null).should.be.false();
+      overlay.parentNode.should.eql(dialog.parentNode);
     });
-    test('overlay is between topmost and remaining dialogs', function() {
+    it('overlay is between topmost and remaining dialogs', function() {
       dialog.showModal();
 
       var other = cleanup(createDialog());
@@ -492,38 +489,38 @@ void function() {
       other.showModal();
 
       var overlay = document.querySelector('._dialog_overlay');
-      assert.isNotNull(overlay);
-      assert.equal(overlay.parentNode, other.parentNode);
+      (overlay === null).should.be.false();
+      overlay.parentNode.should.eql(other.parentNode);
 
-      assert.isAbove(other.style.zIndex, overlay.style.zIndex, 'top-most dialog above overlay');
-      assert.isAbove(overlay.style.zIndex, dialog.style.zIndex, 'overlay above other dialogs');
+      other.style.zIndex.should.be.above(overlay.style.zIndex, 'top-most dialog above overlay');
+      overlay.style.zIndex.should.be.above(dialog.style.zIndex, 'overlay above other dialogs');
     });
   });
 
-  suite('events', function() {
-    test('close event', function() {
+  describe('events', function() {
+    it('close event', function() {
       var closeFired = 0;
       dialog.addEventListener('close', function() {
         ++closeFired;
       });
 
       dialog.show();
-      assert.equal(closeFired, 0);
+      closeFired.should.eql(0);
 
       dialog.close();
-      assert.equal(closeFired, 1);
+      closeFired.should.eql(1);
 
-      assert.throws(dialog.close);  // can't close already closed dialog
-      assert.equal(closeFired, 1);
+      dialog.close.should.throw();  // can't close already closed dialog
+      closeFired.should.eql(1);
 
       dialog.showModal();
       dialog.close();
-      assert.equal(closeFired, 2);
+      closeFired.should.eql(2);
     });
-    test('cancel event', function() {
+    it('cancel event', function() {
       dialog.showModal();
       dialog.dispatchEvent(createKeyboardEvent(27));
-      assert.isFalse(dialog.open, 'esc should close modal');
+      dialog.open.should.be.false('esc should close modal');
 
       var cancelFired = 0;
       dialog.addEventListener('cancel', function() {
@@ -531,20 +528,20 @@ void function() {
       });
       dialog.showModal();
       dialog.dispatchEvent(createKeyboardEvent(27));
-      assert.equal(cancelFired, 1, 'expected cancel to be fired');
-      assert.isFalse(dialog.open), 'esc should close modal again';
+      cancelFired.should.eql(1, 'expected cancel to be fired');
+      dialog.open.should.be.false('esc should close modal again');
 
       // Sanity-check that non-modals aren't effected.
       dialog.show();
       dialog.dispatchEvent(createKeyboardEvent(27));
-      assert.isTrue(dialog.open, 'esc should only close modal dialog');
-      assert.equal(cancelFired, 1);
+      dialog.open.should.be.true('esc should only close modal dialog');
+      cancelFired.should.eql(1);
     });
-    test('overlay click is prevented', function() {
+    it('overlay click is prevented', function() {
       dialog.showModal();
 
       var overlay = document.querySelector('._dialog_overlay');
-      assert.isNotNull(overlay);
+      (overlay === null).should.be.false();
 
       var helper = function(ev) {
         throw Error('body should not be clicked');
@@ -558,8 +555,8 @@ void function() {
     });
   });
 
-  suite('form', function() {
-    test('dialog method input', function() {
+  describe('form', function() {
+    it('dialog method input', function() {
       var value = 'ExpectedValue' + Math.random();
 
       var form = document.createElement('form');
@@ -580,10 +577,10 @@ void function() {
       input.focus();  // emulate user focus action
       input.click();
 
-      assert.isFalse(dialog.open);
-      assert.equal(dialog.returnValue, value);
+      dialog.open.should.be.false();
+      dialog.returnValue.should.eql(value);
     });
-    test('dialog method button', function() {
+    it('dialog method button', function() {
       var value = 'ExpectedValue' + Math.random();
 
       var form = document.createElement('form');
@@ -598,8 +595,8 @@ void function() {
       button.focus();  // emulate user focus action
       button.click();
 
-      assert.isFalse(dialog.open);
-      assert.equal(dialog.returnValue, value);
+      dialog.open.should.be.false();
+      dialog.returnValue.should.eql(value);
 
       // Clear button value, confirm textContent is not used as value.
       button.value = '';
@@ -609,10 +606,9 @@ void function() {
       button.focus();  // emulate user focus action
       button.click();
 
-      assert.equal(dialog.returnValue, button.value,
-          'don\'t take button textContent as value');
+      dialog.returnValue.should.eql(button.value, 'don\'t take button textContent as value');
     });
-    test('boring form inside dialog', function() {
+    it('boring form inside dialog', function() {
       var form = document.createElement('form');
       dialog.appendChild(form);  // don't specify method
       form.addEventListener('submit', function(ev) {
@@ -627,13 +623,13 @@ void function() {
       button.focus();  // emulate user focus action
       button.click();
 
-      assert.isTrue(dialog.open, 'non-dialog form should not close dialog')
-      assert(!dialog.returnValue);
+      dialog.open.should.be.true('non-dialog form should not close dialog');
+      (!dialog.returnValue).should.be.ok();
     });
   });
 
-  suite('order', function() {
-    test('non-modal unchanged', function() {
+  describe('order', function() {
+    it('non-modal unchanged', function() {
       var one = createDialog();
       var two = createDialog();
 
@@ -642,13 +638,13 @@ void function() {
       one.show();
       two.show();
 
-      assert.equal(window.getComputedStyle(one).zIndex, 100);
-      assert.equal(window.getComputedStyle(two).zIndex, 200);
+      window.getComputedStyle(one).zIndex.should.eql('100');
+      window.getComputedStyle(two).zIndex.should.eql('200');
 
       two.close();
-      assert.equal(window.getComputedStyle(two).zIndex, 200);
+      window.getComputedStyle(two).zIndex.should.eql('200');
     });
-    test('modal stacking order', function() {
+    it('modal stacking order', function() {
       dialog.showModal();
 
       // Create incorrectly-named dialogs: front has a lower z-index, and back
@@ -664,27 +660,27 @@ void function() {
 
       var zf = window.getComputedStyle(front).zIndex;
       var zb = window.getComputedStyle(back).zIndex;
-      assert.isAbove(zf, zb, 'showModal order dictates z-index');
+      zf.should.be.above(zb, 'showModal order dictates z-index');
 
       var backBackdrop = back.nextElementSibling;
       var zbb = window.getComputedStyle(backBackdrop).zIndex;
-      assert.equal(backBackdrop.className, 'backdrop');
-      assert.isBelow(zbb, zb, 'backdrop below dialog');
+      backBackdrop.className.should.eql('backdrop');
+      zbb.should.be.below(zb, 'backdrop below dialog');
 
       var frontBackdrop = front.nextElementSibling;
-      var zfb = window.getComputedStyle(frontBackdrop).zIndex
-      assert.equal(frontBackdrop.className, 'backdrop');
-      assert.isBelow(zfb, zf,' backdrop below dialog');
+      var zfb = window.getComputedStyle(frontBackdrop).zIndex;
+      frontBackdrop.className.should.eql('backdrop');
+      zfb.should.be.below(zf, 'backdrop below dialog');
 
-      assert.isAbove(zfb, zb, 'front backdrop is above back dialog');
+      zfb.should.be.above(zb, 'front backdrop is above back dialog');
 
       front.close();
-      assert.notOk(front.style.zIndex, 'modal close should clear zindex');
+      front.style.zIndex.should.not.be.ok('modal close should clear zindex');
     });
   });
 
-  suite('press tab key', function() {
-    test('tab key', function() {
+  describe('press tab key', function() {
+    it('tab key', function() {
       var dialog = createDialog();
       dialog.showModal();
 

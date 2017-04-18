@@ -15,15 +15,14 @@
 -->
 <!DOCTYPE html>
 <meta charset="UTF-8" />
-<link rel="stylesheet" href="bower_components/mocha/mocha.css" />
-<script src="bower_components/mocha/mocha.js"></script>
-<script src="bower_components/chai/chai.js"></script>
-<link rel="stylesheet" type="text/css" href="dialog-polyfill.css" />
-<script src="dialog-polyfill.js"></script>
+<link rel="stylesheet" href="/node_modules/mocha/mocha.css" />
+<script src="/node_modules/mocha/mocha.js"></script>
+<script src="/node_modules/should/should.js"></script>
+<link rel="stylesheet" type="text/css" href="dialog-polyfill-ie8.css" />
+<script src="dialog-polyfill-ie8.js"></script>
 <script>
 
-var assert = chai.assert;
-mocha.setup({ ui: 'tdd' });
+mocha.setup({ ui: 'bdd' });
 
 (function() {
   var pageError = null;
@@ -34,9 +33,9 @@ mocha.setup({ ui: 'tdd' });
 
   window.addEventListener('load', function() {
     if (pageError) {
-      suite('page-script-errors', function() {
-        test('no script errors on page', function() {
-          assert.fail(null, null, pageError);
+      describe('page-script-errors', function() {
+        it('has no script errors on page', function() {
+          should.fail(null, null, pageError);
         });
       });
     }

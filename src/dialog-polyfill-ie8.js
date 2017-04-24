@@ -1,3 +1,5 @@
+/* jshint browser:true, browserify:true, expr:true, sub:true, devel:true, undef:true, boss: true, esversion: 3 */
+/* globals define */
 (function() {
 
   // nb. This is for IE10 and lower _only_.
@@ -21,7 +23,7 @@
       var s = window.getComputedStyle(el);
       var invalid = function(k, ok) {
         return !(s[k] === undefined || s[k] === ok);
-      }
+      };
       if (s.opacity < 1 ||
           invalid('zIndex', 'auto') ||
           invalid('transform', 'none') ||
@@ -129,10 +131,19 @@
     // Note that the DOM is observed inside DialogManager while any dialog
     // is being displayed as a modal, to catch modal removal from the DOM.
 
+    dialog.open = function (arg) {
+        if (arg === undefined){
+            return dialog.hasAttribute('open');
+        } else {
+            this.setOpen(arg);
+        }
+    }.bind(this);
+/*
     Object.defineProperty(dialog, 'open', {
       set: this.setOpen.bind(this),
       get: dialog.hasAttribute.bind(dialog, 'open')
     });
+*/
 
     this.backdrop_ = document.createElement('div');
     this.backdrop_.className = 'backdrop';
@@ -141,7 +152,7 @@
 
   dialogPolyfillInfo.prototype = {
 
-    get dialog() {
+    dialog: function () {
       return this.dialog_;
     },
 
@@ -259,7 +270,7 @@
      * Shows the dialog. If the dialog is already open, this does nothing.
      */
     show: function() {
-      if (!this.dialog_.open) {
+      if (!this.dialog_.open()) {
         this.setOpen(true);
         this.focus_();
       }
@@ -377,8 +388,8 @@
     // WebKit/Blink, checking computedStyle.top == 'auto' is sufficient, but
     // Firefox returns the used value. So we do this crazy thing instead: check
     // the inline style and then go through CSS rules.
-    if ((dialog.style.top != 'auto' && dialog.style.top != '') ||
-        (dialog.style.bottom != 'auto' && dialog.style.bottom != ''))
+    if ((dialog.style.top != 'auto' && dialog.style.top !== '') ||
+        (dialog.style.bottom != 'auto' && dialog.style.bottom !== ''))
       return false;
     return !dialogPolyfill.isInlinePositionSetByStylesheet(dialog);
   };
@@ -391,7 +402,7 @@
       console.warn('This browser already supports <dialog>, the polyfill ' +
           'may not work correctly', element);
     }
-    if (element.localName !== 'dialog') {
+    if (element.localName !== 'dialog' && element.nodeName !== 'dialog') {
       throw new Error('Failed to register dialog: The element is not a dialog.');
     }
     new dialogPolyfillInfo(/** @type {!HTMLDialogElement} */ (element));
@@ -492,7 +503,7 @@
     // Make the overlay a sibling of the dialog itself.
     var last = this.pendingDialogStack[0];
     if (last) {
-      var p = last.dialog.parentNode || document.body;
+      var p = last.dialog().parentNode || document.body;
       p.appendChild(this.overlay);
     } else if (this.overlay.parentNode) {
       this.overlay.parentNode.removeChild(this.overlay);
@@ -506,7 +517,7 @@
   dialogPolyfill.DialogManager.prototype.containedByTopDialog_ = function(candidate) {
     while (candidate = findNearestDialog(candidate)) {
       for (var i = 0, dpi; dpi = this.pendingDialogStack[i]; ++i) {
-        if (dpi.dialog === candidate) {
+        if (dpi.dialog() === candidate) {
           return i === 0;  // only valid if top-most
         }
       }
@@ -525,7 +536,7 @@
     if (this.forwardTab_ === undefined) { return; }  // move focus only from a tab key
 
     var dpi = this.pendingDialogStack[0];
-    var dialog = dpi.dialog;
+    var dialog = dpi.dialog();
     var position = dialog.compareDocumentPosition(event.target);
     if (position & Node.DOCUMENT_POSITION_PRECEDING) {
       if (this.forwardTab_) {  // forward
@@ -550,8 +561,8 @@
         cancelable: true
       });
       var dpi = this.pendingDialogStack[0];
-      if (dpi && dpi.dialog.dispatchEvent(cancelEvent)) {
-        dpi.dialog.close();
+      if (dpi && dpi.dialog().dispatchEvent(cancelEvent)) {
+        dpi.dialog().close();
       }
     } else if (event.keyCode === 9) {
       this.forwardTab_ = !event.shiftKey;
@@ -570,7 +581,7 @@
     // at a time?!
     var clone = this.pendingDialogStack.slice();
     clone.forEach(function(dpi) {
-      if (removed.indexOf(dpi.dialog) !== -1) {
+      if (removed.indexOf(dpi.dialog()) !== -1) {
         dpi.downgradeModal();
       } else {
         dpi.maybeHideModal();

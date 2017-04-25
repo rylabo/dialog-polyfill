@@ -1122,7 +1122,7 @@ THE SOFTWARE.
         } else {
             this.setOpen(arg);
         }
-    }.bind(this);
+    }.bind(dialog);
 /*
     Object.defineProperty(dialog, 'open', {
       set: this.setOpen.bind(this),
@@ -1244,7 +1244,14 @@ THE SOFTWARE.
         target = this.dialog_.querySelector(query.join(', '));
       }
       safeBlur(document.activeElement);
-      target && target.focus();
+      if (target){
+        // add a class to the parent to force repaint in IE8, remove class after
+        var parent = this.dialog_.parentElement;
+        parent.className += ' z';
+        parent.className = parent.className.replace(" z", "");
+        // dialog will be displayed now, can safely focus
+        target.focus();
+      }
     },
 
     /**

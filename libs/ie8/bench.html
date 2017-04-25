@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+    <head>
+        <title>benchmark</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta names="apple-mobile-web-app-status-bar-style" content="black"/>
+        <meta http-equiv="content-language" content="en-US"/>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+        <!--[if IE 8]><script src="build/ie8.max.js"></script><![endif]-->
+        <style type="text/css">
+        div {
+            font-family: sans-serif;
+            font-size: 16px;
+            cursor: default;
+        }
+        </style>
+        <script>
+        this.onload = function () {
+          var div = document.getElementsByTagName('div')[0],
+              type = 'x:increment',
+              times = 0,
+              start;
+          function dispatch(){
+            var e = document.createEvent('Event');
+            e.initEvent(type, true, true);
+            div.dispatchEvent(e);
+          }
+          function increment(e) {
+            times++;
+          }
+          div.addEventListener(type, increment);
+          start = (new Date).getTime();
+          while((new Date).getTime() - start < 1000) dispatch();
+          div.innerHTML = 'Dispatched about ' + times + ' times per second.';
+        };
+        </script>
+    </head>
+    <body>
+        <div></div>
+    </body>
+</html>

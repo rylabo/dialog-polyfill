@@ -98,6 +98,6 @@ dialog {
 
 ### The ```open``` property
 
-Another major limitation is that
+```dialog.open``` may be a property, or a function, depending on the brower. Therefore invoking it not without a check is not safe. 
 
-This is mainly due to the that fact that IE8 uses ECMA Script 3, which makes usage of getters and setters 
+It is therefore recommended to use the ```dialog.openDialog``` method this library adds, which will consistently be implemented as a function across all browsers.

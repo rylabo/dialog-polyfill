@@ -1,7 +1,7 @@
 {
   "name": "dialog-polyfill-ie8",
   "description": "dialog-polyfill-ie8.js is a fork of [dialog-polyfill.js](https://github.com/GoogleChrome/dialog-polyfill) that allows the usage of the `<dialog>`element in browsers not yet supporting it. As the name suggests, this fork exists to allow support for `<dialog>` in IE8+.",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "keywords": [
     "html",
     "dialog",

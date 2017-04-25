@@ -1,5 +1,4 @@
 .DS_Store
 bower_components
 node_modules
-Gruntfile.js
 karma_html

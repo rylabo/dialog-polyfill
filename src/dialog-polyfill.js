@@ -231,14 +231,14 @@
      */
     focus_: function() {
       // Find element with `autofocus` attribute, or fall back to the first form/tabindex control.
-        var candidates = this.dialog_.querySelectorAll('[autofocus]');
-        var count = candidates.length;
-        var target;
-        for (var i = 0; i < count; i++) {
-            if (!candidates.item(i).hasAttribute('disabled')){
-                target = candidates.item(i);
-            }
+      var candidates = this.dialog_.querySelectorAll('[autofocus]');
+      var count = candidates.length;
+      var target;
+      for (var i = 0; i < count; i++) {
+        if (!candidates.item(i).hasAttribute('disabled')){
+          target = candidates.item(i);
         }
+      }
       if (!target && this.dialog_.tabIndex >= 0) {
         target = this.dialog_;
       }
@@ -254,14 +254,14 @@
         target = this.dialog_.querySelector(query.join(', '));
       }
       safeBlur(document.activeElement);
-        if (target){
-            // add a class to the parent to force repaint in IE8, remove class after
-            var parent = this.dialog_.parentElement;
-            parent.className += ' z';
-            parent.className = parent.className.replace(" z", "");
-            // dialog will be displayed now, can safely focus
-            target.focus();
-        }
+      if (target){
+        // add a class to the parent to force repaint in IE8, remove class after
+        var parent = this.dialog_.parentElement;
+        parent.className += ' z';
+        parent.className = parent.className.replace(" z", "");
+        // dialog will be displayed now, can safely focus
+        target.focus();
+      }
     },
 
     /**

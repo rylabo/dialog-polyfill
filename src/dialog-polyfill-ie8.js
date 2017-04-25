@@ -227,13 +227,23 @@
       e.stopPropagation();
     },
 
+
     /**
      * Focuses on the first focusable element within the dialog. This will always blur the current
      * focus, even if nothing within the dialog is found.
      */
     focus_: function() {
       // Find element with `autofocus` attribute, or fall back to the first form/tabindex control.
-      var target = this.dialog_.querySelector('[autofocus]:not([disabled])');
+      var candidates = this.dialog_.querySelectorAll('[autofocus]');
+      var count = candidates.length;
+      var target;
+      for (var i = 0; i < count; i++) {
+        if (!candidates.item(i).hasAttribute('disabled')){
+         target = candidates.item(i);
+        }
+      }
+
+
       if (!target && this.dialog_.tabIndex >= 0) {
         target = this.dialog_;
       }

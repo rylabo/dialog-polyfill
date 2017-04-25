@@ -1,5 +1,4 @@
-dialog-polyfill.js is a polyfill for `<dialog>`.
-Check out [some demos](http://demo.agektmr.com/dialog/)!
+dialog-polyfill-ie8.js is a fork of [dialog-polyfill.js](https://github.com/GoogleChrome/dialog-polyfill)  that allows the usage of the `<dialog>`element in browsers not yet supporting it. As the name suggests, this fork exists to allow support for `<dialog>` in IE8+.
 
 `<dialog>` is an element for a popup box in a web page, including a modal option which will make the rest of the page inert during use.
 This could be useful to block a user's interaction until they give you a response, or to confirm an action.
@@ -9,14 +8,20 @@ See the [HTML spec](https://html.spec.whatwg.org/multipage/forms.html#the-dialog
 
 ### Installation
 
+This package needs to have several libraries loaded before it will work in IE:
+
+- [html5-shiv](https://github.com/aFarkas/html5shiv) - Allows HTML5 elements in IE8
+- [ie8](https://github.com/WebReflection/ie8) - Some browser specific DOM fixes for IE8
+- [dom4](https://github.com/WebReflection/dom4) - A cross-browser polyfill that aims for full DOM level 4 support in most major browsers
+
 You may optionally install via NPM or Bower-
 
-    $ npm install dialog-polyfill
-    $ bower install dialog-polyfill
+    $ npm install dialog-polyfill-ie8
+    $ bower install dialog-polyfill-ie8
 
 ### Supports
 
-This polyfill works on modern versions of all major browsers. It also supports IE9 and above.
+This polyfill aims to work in modern versions of all major browsers. It also supports IE8 and above.
 
 ### Steps
 
@@ -29,7 +34,7 @@ This polyfill works on modern versions of all major browsers. It also supports I
 
 ```html
 <head>
-  <link rel="stylesheet" type="text/css" href="dialog-polyfill.css" />
+  <link rel="stylesheet" type="text/css" href="/path/to/dialog-polyfill-ie8.css" />
 </head>
 <body>
   <dialog>
@@ -38,7 +43,7 @@ This polyfill works on modern versions of all major browsers. It also supports I
       <input type="submit" value="Close" />
     </form>
   </dialog>
-  <script src="dialog-polyfill.js"></script>
+  <script src="/path/to/dialog-polyfill-ie8.js"></script>
   <script>
     var dialog = document.querySelector('dialog');
     dialogPolyfill.registerDialog(dialog);
@@ -90,3 +95,9 @@ dialog {
   transform: translate(0, -50%);
 }
 ```
+
+### The ```open``` property
+
+Another major limitation is that
+
+This is mainly due to the that fact that IE8 uses ECMA Script 3, which makes usage of getters and setters 

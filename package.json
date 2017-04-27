@@ -54,6 +54,7 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-should": "^1.0.0",
     "karma-vivaldi-launcher": "0.0.1",
+    "phantomjs-prebuilt": "^2.1.14",
     "requirejs": "^2.3.3",
     "should": "^11.2.1"
   },

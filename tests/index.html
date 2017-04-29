@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<meta charset="UTF-8" />
 <!--
  Copyright 2015 Google Inc. All rights reserved.
 
@@ -15,13 +17,18 @@
 -->
 <!DOCTYPE html>
 <meta charset="UTF-8" />
+<!--[if IE 8]>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ie8/0.6.0/ie8.js"></script>
+<![endif]-->
+<script type="text/javascript" src="../node_modules/dom4/build/dom4.js"></script>
 <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
-<script src="../node_modules/mocha/mocha.js"></script>
-<script src="../node_modules/should/should.js"></script>
+<script type="text/javascript" src="../node_modules/mocha/mocha.js"></script>
+<script type="text/javascript" src="../node_modules/should/should.js"></script>
 <link rel="stylesheet" type="text/css" href="../dist/dialog-polyfill-ie8.css" />
-<script src="../dist/dialog-polyfill-ie8.js"></script>
+<script type="text/javascript" src="../dist/dialog-polyfill-ie8.js"></script>
 <script>
 
+var assert = require("assert");
 mocha.setup({ ui: 'bdd' });
 
 (function() {

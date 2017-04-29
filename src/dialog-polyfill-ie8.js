@@ -1,6 +1,31 @@
 /* jshint browser:true, browserify:true, expr:true, sub:true, devel:true, undef:true, boss: true, esversion: 3 */
 /* globals define */
 (function() {
+  if (!Function.prototype.bind) {
+    Function.prototype.bind = function(oThis) {
+      if (typeof this !== 'function') {
+        // closest thing possible to the ECMAScript 5
+        // internal IsCallable function
+        throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
+      }
+
+      var aArgs   = Array.prototype.slice.call(arguments, 1),
+          fToBind = this,
+          fNOP    = function() {},
+          fBound  = function() {
+            return fToBind.apply(this instanceof fNOP ? this : oThis,
+                   aArgs.concat(Array.prototype.slice.call(arguments)));
+          };
+
+      if (this.prototype) {
+        // Function.prototype doesn't have a prototype property
+        fNOP.prototype = this.prototype;
+      }
+      fBound.prototype = new fNOP();
+
+      return fBound;
+    };
+  }
 
   // nb. This is for IE10 and lower _only_.
   var supportCustomEvent = window.CustomEvent;
@@ -91,6 +116,7 @@
     this.dialog_ = dialog;
     this.replacedStyleTop_ = false;
     this.openAsModal_ = false;
+    this.setOpen_ = this.setOpen.bind(this);
 
     // Set a11y role. Browsers that support dialog implicitly know this already.
     if (!dialog.hasAttribute('role')) {
@@ -100,6 +126,7 @@
     dialog.show = this.show.bind(this);
     dialog.showModal = this.showModal.bind(this);
     dialog.close = this.close.bind(this);
+    dialog.setOpen = this.setOpen.bind(this);
 
     if (!('returnValue' in dialog)) {
       dialog.returnValue = '';
@@ -131,19 +158,36 @@
     // Note that the DOM is observed inside DialogManager while any dialog
     // is being displayed as a modal, to catch modal removal from the DOM.
 
-    dialog.open = function (arg) {
-        if (arg === undefined){
-            return dialog.hasAttribute('open');
-        } else {
-            this.setOpen(arg);
-        }
-    }.bind(dialog);
-/*
-    Object.defineProperty(dialog, 'open', {
-      set: this.setOpen.bind(this),
-      get: dialog.hasAttribute.bind(dialog, 'open')
-    });
-*/
+    if (Object.defineProperty === undefined) {
+      dialog.open = function (arg) {
+          if (arg === undefined){
+              return dialog.hasAttribute('open');
+          } else {
+              this.setOpen(this, arg);
+          }
+      }.bind(dialog);
+    } else {
+      Object.defineProperty(dialog, 'open', {
+        set: this.setOpen.bind(this),
+        get: dialog.hasAttribute.bind(dialog, 'open')
+      });
+    }
+
+    dialog.setOpenProperty = function (bool){
+      if (bool === undefined || bool === null) {
+        throw new TypeError("expected a boolean value");
+      } else {
+        return this.setOpen.call(this, bool);
+      }
+    };
+    dialog.getOpenProperty = function (){
+      // TODO ignore args
+      if (typeof dialog.open === "function") {
+        return dialog.open();
+      } else {
+        return dialog.open;
+      }
+    };
 
     this.backdrop_ = document.createElement('div');
     this.backdrop_.className = 'backdrop';
@@ -287,7 +331,8 @@
      * Shows the dialog. If the dialog is already open, this does nothing.
      */
     show: function() {
-      if (!this.dialog_.open()) {
+      var isOpen = (typeof this.dialog_.open === 'function') ? this.dialog_.open : function (){return this.dialog_.open;}.bind(this);
+      if (!isOpen()) {
         this.setOpen(true);
         this.focus_();
       }

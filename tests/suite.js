@@ -92,45 +92,67 @@ void function() {
   }
 
   var dialog;  // global dialog for all tests
-  var dialogOpen;
+  var getOpenProperty;
   beforeEach(function() {
     dialog = createDialog('Default Dialog');
-    dialogOpen = (typeof dialog.open === 'function') ? dialog.open : function (){return dialog.open;};
+    getOpenProperty = (typeof dialog.open === 'function') ? dialog.open : function (){return dialog.open;};
   });
 
   describe('basic functions', function() {
     it('shows and closes', function() {
-      dialog.hasAttribute('open').should.be.false();
+      dialog.hasAttribute('open').should.be["false"]();
       dialog.show();
-      dialog.hasAttribute('open').should.be.true();
-      dialogOpen().should.be.true();
+      dialog.hasAttribute('open').should.be["true"]();
+      getOpenProperty().should.be["true"]();
 
       var returnValue = 1234;
       dialog.close(returnValue);
-      dialog.hasAttribute('open').should.be.false();
+      dialog.hasAttribute('open').should.be["false"]();
       dialog.returnValue.should.eql(returnValue);
 
       dialog.show();
       dialog.close();
-      dialogOpen().should.be.false();
+      getOpenProperty().should.be["false"]();
       dialog.returnValue.should.eql(returnValue);
     });
-    it('open', function() {
-      dialog.hasAttribute('open').should.be.false();
-      dialog.show();
-      dialog.hasAttribute('open').should.be.true();
-      dialogOpen().should.be.true();
 
-      dialog.open(false);
-      dialogOpen().should.be.false();
-      dialog.hasAttribute('open').should.be.false('open property should clear attribute');
-      dialog.close.should.throw();
+    if (Object.defineProperty !== undefined){
+      describe('"open" in an environment that supports "Object.defineProperty"', function() {
+        it('open', function() {
+          dialog.hasAttribute('open').should.be["false"]();
+          dialog.show();
+          dialog.hasAttribute('open').should.be["true"]();
+          dialog.open.should.be["true"]();
 
-      var overlay = document.querySelector('._dialog_overlay');
-      (overlay === null).should.be.true();
-    });
+          dialog.open = false;
+          dialog.open.should.be["false"]();
+          dialog.hasAttribute('open').should.be["false"]('open property should clear attribute');
+          dialog.close.should["throw"]();
+
+          var overlay = document.querySelector('._dialog_overlay');
+          (overlay === null).should.be["true"]();
+        });
+      });
+    } else {
+      describe('"open" in an environment that does NOT support "Object.defineProperty"', function() {
+        it('open', function() {
+          dialog.hasAttribute('open').should.be["false"]();
+          dialog.show();
+          dialog.hasAttribute('open').should.be["true"]();
+          dialog.open().should.be["true"]();
+
+          dialog.open(false);
+          dialog.open().should.be["false"]();
+          dialog.hasAttribute('open').should.be["false"]('open property should clear attribute');
+          dialog.close.should["throw"]();
+
+          var overlay = document.querySelector('._dialog_overlay');
+          (overlay === null).should.be["true"]();
+        });
+      });
+    }
     it('show/showModal interaction', function() {
-      dialog.hasAttribute('open').should.be.false();
+      dialog.hasAttribute('open').should.be["false"]();
       dialog.show();
 
       // If the native dialog is being tested, show/showModal are not already
@@ -138,39 +160,39 @@ void function() {
       var show = function() { dialog.show(); };
       var showModal = function() { dialog.showModal(); };
 
-      show.should.not.throw();
-      showModal.should.throw();
+      show.should.not["throw"]();
+      showModal.should["throw"]();
 
-      dialog.open(false);
-      showModal.should.not.throw();
-      show.should.not.throw();  // show after showModal does nothing
-      showModal.should.throw();
+      dialog.setOpen(false);
+      showModal.should.not["throw"]();
+      show.should.not["throw"]();  // show after showModal does nothing
+      showModal.should["throw"]();
       // TODO: check dialog is still modal
-
-      dialog.open().should.be.true();
+      var check = dialog.getOpenProperty();
+      dialog.getOpenProperty().should.be["true"]();
     });
     it('setAttribute reflects property', function() {
       dialog.setAttribute('open', '');
-      dialog.open().should.be.true('attribute opens dialog');
+      dialog.getOpenProperty().should.be["true"]('attribute opens dialog');
     });
     it('changing open to dummy value is ignored', function() {
       dialog.showModal();
 
       dialog.setAttribute('open', 'dummy, ignored');
-      dialog.open().should.be.true('dialog open with dummy open value');
+      dialog.getOpenProperty().should.be["true"]('dialog open with dummy open value');
 
       var overlay = document.querySelector('._dialog_overlay');
       overlay.should.be.ok('dialog is still modal');
     });
     it('show/showModal outside document', function() {
-      dialog.open(false);
+      dialog.setOpenProperty(false);
       dialog.parentNode.removeChild(dialog);
 
-      (function() { dialog.showModal(); }).should.throw();
+      (function() { dialog.showModal(); }).should["throw"]();
 
-      (function() { dialog.show(); }).should.not.throw();
-      dialog.open().should.be.true('can open non-modal outside document');
-      document.body.contains(dialog).should.be.false();
+      (function() { dialog.show(); }).should.not["throw"]();
+      dialog.getOpenProperty().should.be["true"]('can open non-modal outside document');
+      document.body.contains(dialog).should.be["false"]();
     });
     it('has a11y property', function() {
       dialog.getAttribute('role').should.eql('dialog', 'role should be dialog');
@@ -184,8 +206,8 @@ void function() {
       window.setTimeout(done, 0);
     });
     it('DOM direct removal', function(done) {
-      dialog.open().should.be.true();
-      (document.querySelector('.backdrop') === null).should.be.false();
+      dialog.getOpenProperty().should.be["true"]();
+      (document.querySelector('.backdrop') === null).should.be["false"]();
 
       var parentNode = dialog.parentNode;
       parentNode.removeChild(dialog);
@@ -193,14 +215,14 @@ void function() {
       // DOMNodeRemoved defers its task a frame (since it occurs before removal, not after). This
       // doesn't effect MutationObserver, just delays the test a frame.
       window.setTimeout(function() {
-        (document.querySelector('.backdrop') === null).should.be.true('dialog removal should clear modal');
+        (document.querySelector('.backdrop') === null).should.be["true"]('dialog removal should clear modal');
 
-        dialog.open().should.be.true('removed dialog should still be open');
+        dialog.getOpenProperty().should.be["true"]('removed dialog should still be open');
         parentNode.appendChild(dialog);
 
-        dialog.open().should.be.true('re-added dialog should still be open');
-        (document.querySelector('.backdrop') === null).should.be.true('dialog removal should clear modal');
-        (document.querySelector('.backdrop') === null).should.be.true('re-add dialog should not be modal');
+        dialog.getOpenProperty().should.be["true"]('re-added dialog should still be open');
+        (document.querySelector('.backdrop') === null).should.be["true"]('dialog removal should clear modal');
+        (document.querySelector('.backdrop') === null).should.be["true"]('re-add dialog should not be modal');
 
         done();
       }, 0);
@@ -213,8 +235,8 @@ void function() {
       document.body.removeChild(div);
 
       window.setTimeout(function() {
-        (document.querySelector('.backdrop') === null).should.be.true('dialog removal should clear modal');
-        dialog.open().should.be.true('removed dialog should still be open');
+        (document.querySelector('.backdrop') === null).should.be["true"]('dialog removal should clear modal');
+        dialog.getOpenProperty().should.be["true"]('removed dialog should still be open');
         done();
       }, 0);
     });
@@ -225,8 +247,8 @@ void function() {
       div.appendChild(dialog);
 
       window.setTimeout(function() {
-        (document.querySelector('.backdrop') === null).should.be.true('backdrop should disappear');
-        dialog.open().should.be.true();
+        (document.querySelector('.backdrop') === null).should.be["true"]('backdrop should disappear');
+        dialog.getOpenProperty().should.be["true"]();
         done();
       }, 0);
     });
@@ -303,14 +325,14 @@ void function() {
     it('backdrop div on modal', function() {
       dialog.showModal();
       var foundBackdrop = document.querySelector('.backdrop');
-      (foundBackdrop === null).should.be.false();
+      (foundBackdrop === null).should.be["false"]();
 
       var sibling = dialog.nextElementSibling;
       foundBackdrop.should.equal(sibling);
     });
     it('no backdrop on non-modal', function() {
       dialog.show();
-      (document.querySelector('.backdrop') === null).should.be.true();
+      (document.querySelector('.backdrop') === null).should.be["true"]();
       dialog.close();
     });
     it('backdrop click appears as dialog', function() {
@@ -481,7 +503,7 @@ void function() {
       dialog.showModal();
 
       var overlay = document.querySelector('._dialog_overlay');
-      (overlay === null).should.be.false();
+      (overlay === null).should.be["false"]();
       overlay.parentNode.should.eql(dialog.parentNode);
     });
     it('overlay is between topmost and remaining dialogs', function() {
@@ -492,7 +514,7 @@ void function() {
       other.showModal();
 
       var overlay = document.querySelector('._dialog_overlay');
-      (overlay === null).should.be.false();
+      (overlay === null).should.be["false"]();
       overlay.parentNode.should.eql(other.parentNode);
 
       other.style.zIndex.should.be.above(overlay.style.zIndex, 'top-most dialog above overlay');
@@ -513,7 +535,7 @@ void function() {
       dialog.close();
       closeFired.should.eql(1);
 
-      dialog.close.should.throw();  // can't close already closed dialog
+      dialog.close.should["throw"]();  // can't close already closed dialog
       closeFired.should.eql(1);
 
       dialog.showModal();
@@ -523,7 +545,7 @@ void function() {
     it('cancel event', function() {
       dialog.showModal();
       dialog.dispatchEvent(createKeyboardEvent(27));
-      dialog.open().should.be.false('esc should close modal');
+      dialog.getOpenProperty().should.be["false"]('esc should close modal');
 
       var cancelFired = 0;
       dialog.addEventListener('cancel', function() {
@@ -532,19 +554,19 @@ void function() {
       dialog.showModal();
       dialog.dispatchEvent(createKeyboardEvent(27));
       cancelFired.should.eql(1, 'expected cancel to be fired');
-      dialog.open().should.be.false('esc should close modal again');
+      dialog.getOpenProperty().should.be["false"]('esc should close modal again');
 
       // Sanity-check that non-modals aren't effected.
       dialog.show();
       dialog.dispatchEvent(createKeyboardEvent(27));
-      dialog.open().should.be.true('esc should only close modal dialog');
+      dialog.getOpenProperty().should.be["true"]('esc should only close modal dialog');
       cancelFired.should.eql(1);
     });
     it('overlay click is prevented', function() {
       dialog.showModal();
 
       var overlay = document.querySelector('._dialog_overlay');
-      (overlay === null).should.be.false();
+      (overlay === null).should.be["false"]();
 
       var helper = function(ev) {
         throw Error('body should not be clicked');
@@ -580,7 +602,7 @@ void function() {
       input.focus();  // emulate user focus action
       input.click();
 
-      dialog.open().should.be.false();
+      dialog.getOpenProperty().should.be["false"]();
       dialog.returnValue.should.eql(value);
     });
     it('dialog method button', function() {
@@ -598,7 +620,7 @@ void function() {
       button.focus();  // emulate user focus action
       button.click();
 
-      dialog.open().should.be.false();
+      dialog.getOpenProperty().should.be["false"]();
       dialog.returnValue.should.eql(value);
 
       // Clear button value, confirm textContent is not used as value.
@@ -626,7 +648,7 @@ void function() {
       button.focus();  // emulate user focus action
       button.click();
 
-      dialog.open().should.be.true('non-dialog form should not close dialog');
+      dialog.getOpenProperty().should.be["true"]('non-dialog form should not close dialog');
       (!dialog.returnValue).should.be.ok();
     });
   });

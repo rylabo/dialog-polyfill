@@ -1,4 +1,6 @@
-dialog-polyfill-ie8.js is a fork of [dialog-polyfill.js](https://github.com/GoogleChrome/dialog-polyfill)  that allows the usage of the `<dialog>`element in browsers not yet supporting it. As the name suggests, this fork exists to allow support for `<dialog>` in IE8+.
+As the name suggests, this fork exists to allow support for `<dialog>` in IE8+. Bear in mind, IE8 is a very old browser, so some sacrifices needed to be made to get it to function properly.
+
+dialog-polyfill-ie8.js aims to function as a drop-in replacement for[dialog-polyfill.js](https://github.com/GoogleChrome/dialog-polyfill). As with [dialog-polyfill.js](https://github.com/GoogleChrome/dialog-polyfill), it allows the usage of the `<dialog>` element in browsers not yet supporting it.
 
 `<dialog>` is an element for a popup box in a web page, including a modal option which will make the rest of the page inert during use.
 This could be useful to block a user's interaction until they give you a response, or to confirm an action.
@@ -14,14 +16,14 @@ This package needs to have several libraries loaded before it will work in IE:
 - [ie8](https://github.com/WebReflection/ie8) - Some browser specific DOM fixes for IE8
 - [dom4](https://github.com/WebReflection/dom4) - A cross-browser polyfill that aims for full DOM level 4 support in most major browsers
 
-You may optionally install via NPM or Bower-
+It is recommended that users install via NPM with the ```--only=production``` flag, as this library has a LOT of dev dependencies:
 
-    $ npm install dialog-polyfill-ie8
-    $ bower install dialog-polyfill-ie8
+    $ npm install dialog-polyfill-ie8 --only=production
+
 
 ### Supports
 
-This polyfill aims to work in modern versions of all major browsers. It also supports IE8 and above.
+This polyfill aims to work in modern versions of all major browsers, supporting IE8 and above.
 
 ### Steps
 
@@ -67,6 +69,14 @@ dialog + .backdrop { /* polyfill */
 }
 ```
 
+## Testing
+
+You will need to edit the karma.conf.js 
+
+Once that is done, you can test by running:
+
+    grunt karma:dev
+
 ## Limitations
 
 In the polyfill, modal dialogs have limitations-
@@ -96,8 +106,8 @@ dialog {
 }
 ```
 
-### The ```open``` property
+### The `open` property
 
-```dialog.open``` may be a property, or a function, depending on the brower. Therefore invoking it not without a check is not safe. 
+`dialog.open` may be a property, or a function, depending on the browser. Users intending to . 
 
-It is therefore recommended to use the ```dialog.openDialog``` method this library adds, which will consistently be implemented as a function across all browsers.
+It is therefore recommended to use the `dialog.openDialog` method this library adds, which will consistently be implemented as a function across all browsers.
